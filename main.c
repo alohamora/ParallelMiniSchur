@@ -37,6 +37,7 @@ int main(int argc, char** argv){
     }
     coo2csr(&A);
     t = clock();
+    printf("Starting to build preconditioner...\n");
     sparseMatrixCopy(&A, &d_A, GPU);
     getSubMatrix(&A, &D, &d_A, &d_D, 1, A.n - sizeG, 1, A.m - sizeG, 1);
     getSubMatrix(&A, &L, &d_A, &d_L, A.n - sizeG + 1, A.n, 1, A.m - sizeG, 1);
