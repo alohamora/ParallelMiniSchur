@@ -2,7 +2,7 @@
 #include<stdlib.h>
 #define ll long long int
 
-ll upperBound(int *A,ll low, ll high,ll K){
+ll upperBound(ll *A,ll low, ll high,ll K){
     ll mid = ( low + high ) / 2;
     while(low <= high){
         mid = ( low + high ) / 2 ; 
@@ -13,11 +13,12 @@ ll upperBound(int *A,ll low, ll high,ll K){
         else
             low = mid + 1 ;
     }
+    if(A[mid] <= K) mid++;
     return mid ;
 }
 
 
-ll lowerBound(int *A,ll low, ll high,ll K){
+ll lowerBound(ll *A,ll low, ll high,ll K){
     ll mid = ( low + high ) / 2;
     while(low <= high){
         mid = ( low + high ) / 2 ; 
@@ -28,5 +29,6 @@ ll lowerBound(int *A,ll low, ll high,ll K){
         else
             low = mid + 1 ;
     }
+    if(A[mid] < K) mid++;
     return mid ;
 }
