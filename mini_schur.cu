@@ -6,25 +6,33 @@
 #include<cusparse.h>
 #include "sparse_matrix.h"
 #include "mini_schur.h"
+#define ll long long int
 
 cusparseMatDescr_t descrA;      
 cusolverSpHandle_t solver_handle;
 
 int solveLU(int N, int nnz, float* h_A, int* h_A_RowIndices, int* h_A_ColIndices, float* h_y, float* h_x);
-void convert2cusparse(sparse_matrix_t* A, cusparse_matrix_csr* B);
+void convert2cusparse(sparse_matrix_t* A);
+
+__global__ void csr2dense(ll* rows, ll* cols, float* vals, ll n, float* dense){
+    ll idx = rows[blockIdx.x] + threadIdx.x;
+    if(idx < rows[blockIdx.x + 1])  dense[blockIdx.x + (cols[idx]*n)] = vals[idx];
+}
+
 void calculateMiniSchur(sparse_matrix_t* schur, sparse_matrix_t* D, sparse_matrix_t* L, sparse_matrix_t* U, sparse_matrix_t* G){
     float *d_y, *y, *x;
-    sparse_matrix_t h_D, h_U;
-    cusparse_matrix_csr  D_csr, U_csr;
+    sparse_matrix_t h_D;
+    y = (float *)malloc((D->n * U->m) * sizeof(float));
+    cudaMalloc((void **)&(d_y), (D->n * U->m) * sizeof(float));
+    cudaMemset(d_y, 0.0f, (D->n * U->m) * sizeof(float));
+    csr2dense<<<U->n, U->m>>>(U->rows, U->cols, U->vals, U->n, d_y);
+    x = (float *)malloc((D->n * U->m) * sizeof(float));
     sparseMatrixCopy(D, &h_D, CPU);
-    sparseMatrixCopy(U, &h_U, CPU);
-    convert2cusparse(&h_U, &U_csr);
-    convert2cusparse(&h_D, &D_csr);
-    y = (float *)malloc(h_D.n * sizeof(float));
-    cudaMalloc((void **)&(d_y), h_D.n * sizeof(ll));
-    x = (float *)malloc(h_D.n * sizeof(float));
-    for(int i=0;i<h_D.n;i++)    y[i] = i + 1;
-    solveLU(h_D.n, h_D.nnz, h_D.vals, D_csr.rows, D_csr.cols, y, x);
+    convert2cusparse(&h_D);
+    cudaDeviceSynchronize();
+    cudaMemcpy(y, d_y, (D->n * U->m) * sizeof(float), cudaMemcpyDeviceToHost);
+    for(int i=0;i<U->m;i++)
+        solveLU(h_D.n, h_D.nnz, h_D.vals, h_D.irows, h_D.icols, y + (i*(U->n)), x + (i*(U->n)));
 }
 
 int solveLU(int N, int nnz, float* h_A, int* h_A_RowIndices, int* h_A_ColIndices, float* h_y, float* h_x){
@@ -33,11 +41,11 @@ int solveLU(int N, int nnz, float* h_A, int* h_A_RowIndices, int* h_A_ColIndices
     return singularity;
 }
 
-void convert2cusparse(sparse_matrix_t* A, cusparse_matrix_csr* B){
-    B->rows = (int *)malloc((A->n+1) * sizeof(int));
-    B->cols = (int *)malloc((A->nnz) * sizeof(int));
-    for(int i=0;i<A->nnz;i++)  B->cols[i] = (int) A->cols[i];
-    for(int i=0;i<=A->n;i++)  B->rows[i] = (int) A->rows[i] + 1;
+void convert2cusparse(sparse_matrix_t* A){
+    A->irows = (int *)malloc((A->n+1) * sizeof(int));
+    A->icols = (int *)malloc((A->nnz) * sizeof(int));
+    for(int i=0;i<A->nnz;i++)  A->icols[i] = (int) A->cols[i];
+    for(int i=0;i<=A->n;i++)  A->irows[i] = (int) A->rows[i] + 1;
 }
 
 void createHandles(){

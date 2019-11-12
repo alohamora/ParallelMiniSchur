@@ -36,8 +36,8 @@ void getSubMatrix(sparse_matrix_t* A, sparse_matrix_t *sub, sparse_matrix_t *d_A
     stInd = (ll *)malloc(d_sub->n * sizeof(ll));
     cum = (ll *)malloc(d_sub->n * sizeof(ll));
     for(int i=rowL;i<=rowR;i++){
-        l = lowerBound(A->cols, A->rows[i - A->index], (i == A->n - (1 - A->index)) ? A->nnz - 1 : A->rows[i - A->index + 1] - 1, colL);
-        r = upperBound(A->cols, A->rows[i - A->index], (i == A->n - (1 - A->index)) ? A->nnz - 1 : A->rows[i - A->index + 1] - 1, colR);
+        l = lowerBound(A->cols, A->rows[i - A->index], A->rows[i - A->index + 1] - 1, colL);
+        r = upperBound(A->cols, A->rows[i - A->index], A->rows[i - A->index + 1] - 1, colR);
         stInd[i-rowL] = l;
         cum[i-rowL] = (i > rowL) ? cum[i-rowL-1] + MAX(r-l, 0) : MAX(r-l, 0);
         maxCols = MAX(r-l, maxCols);

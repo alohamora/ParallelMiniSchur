@@ -26,6 +26,7 @@ typedef struct sparse_matrix_t {
     enum memory_type memtype;
     ll n,m,nnz;
     ll *rows, *cols;
+    int *irows, *icols;
     float *vals;
 }sparse_matrix_t;
 

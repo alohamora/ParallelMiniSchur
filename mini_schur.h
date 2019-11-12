@@ -1,7 +1,3 @@
-typedef struct cusparse_matrix_csr{
-    int *rows, *cols;
-    int n,m,nnz;
-}cusparse_matrix_csr;
 #ifdef __cplusplus
 extern "C" {
 #endif
