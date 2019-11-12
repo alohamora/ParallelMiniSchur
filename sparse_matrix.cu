@@ -8,6 +8,8 @@
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
+ll *MAJOR_SORTING_INDEX, *MINOR_SORTING_INDEX;
+
 int cmp(const void *l, const void *r);
 void permuteMatrix(sparse_matrix_t* A, ll permute[]);
 
@@ -61,13 +63,13 @@ void sparseMatrixCopy(sparse_matrix_t* A, sparse_matrix_t* B, enum memory_type m
     B->memtype = mem;
     sparseMatrixMalloc(B);
     if(A->memtype == CPU && B->memtype == GPU){
-        if(A->descr == CSR)    cudaMemcpy(B->rows, A->rows, A->n * sizeof(ll), cudaMemcpyHostToDevice);
+        if(A->descr == CSR)    cudaMemcpy(B->rows, A->rows, (A->n+1) * sizeof(ll), cudaMemcpyHostToDevice);
         else    cudaMemcpy(B->rows, A->rows, A->nnz * sizeof(ll), cudaMemcpyHostToDevice);
         cudaMemcpy(B->cols, A->cols, A->nnz * sizeof(ll), cudaMemcpyHostToDevice);
         cudaMemcpy(B->vals, A->vals, A->nnz * sizeof(float), cudaMemcpyHostToDevice);
     }
     else if(A->memtype == GPU && B->memtype == CPU){
-        if(A->descr == CSR)    cudaMemcpy(B->rows, A->rows, A->n * sizeof(ll), cudaMemcpyDeviceToHost);
+        if(A->descr == CSR)    cudaMemcpy(B->rows, A->rows, (A->n+1) * sizeof(ll), cudaMemcpyDeviceToHost);
         else    cudaMemcpy(B->rows, A->rows, A->nnz * sizeof(ll), cudaMemcpyDeviceToHost);
         cudaMemcpy(B->cols, A->cols, A->nnz * sizeof(ll), cudaMemcpyDeviceToHost);
         cudaMemcpy(B->vals, A->vals, A->nnz * sizeof(float), cudaMemcpyDeviceToHost);
@@ -77,13 +79,13 @@ void sparseMatrixCopy(sparse_matrix_t* A, sparse_matrix_t* B, enum memory_type m
 void sparseMatrixMalloc(sparse_matrix_t* A){
     if(A->memtype == CPU){
         if(A->descr == COO)    A->rows = (ll *)malloc(A->nnz * sizeof(ll));
-        else    A->rows = (ll *)malloc(A->n * sizeof(ll));
+        else    A->rows = (ll *)malloc((A->n+1) * sizeof(ll));
         A->cols = (ll *)malloc(A->nnz * sizeof(ll));
         A->vals = (float *)malloc(A->nnz * sizeof(float));
     }
     else{
         if(A->descr == COO)    cudaMalloc((void **)&(A->rows), A->nnz * sizeof(ll));
-        else    cudaMalloc((void **)&(A->rows), A->n * sizeof(ll));
+        else    cudaMalloc((void **)&(A->rows), (A->n+1) * sizeof(ll));
         cudaMalloc((void **)&(A->cols), A->nnz * sizeof(ll));
         cudaMalloc((void **)&(A->vals), A->nnz * sizeof(float));
     }
@@ -114,7 +116,7 @@ void coo2csr(sparse_matrix_t* A){
     }
     A->descr = CSR;
     A->order = ROW_MAJOR;
-    rowIndex = (ll *)malloc(A->n * sizeof(ll));
+    rowIndex = (ll *)malloc((A->n + 1) * sizeof(ll));
     rowIndex[0] = 0;
     row = (ll)A->index;
     for(ll i=0;i<A->nnz;i++){
@@ -122,6 +124,7 @@ void coo2csr(sparse_matrix_t* A){
             while(row != A->rows[i])    rowIndex[(++row) - A->index] = i; 
         }
     }
+    rowIndex[A->n] = A->nnz;
     free(A->rows);
     A->rows = rowIndex;
 }

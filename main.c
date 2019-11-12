@@ -1,7 +1,8 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<time.h>
-#include"sparse_matrix.h"
+#include "sparse_matrix.h"
+#include "mini_schur.h"
 #define ll long long int
 
 int main(int argc, char** argv){
@@ -9,7 +10,8 @@ int main(int argc, char** argv){
     ll stD, endD, stG, endG, subDsz, subGsz;
     clock_t t;
     double time_taken;
-    sparse_matrix_t A, d_A, D, d_D, G, d_G, L, d_L, U, d_U, *subD, *subL, *subU, *subG, *miniSchurs;
+    sparse_matrix_t A, d_A, D, d_D, G, d_G, L, d_L, U, d_U;
+    sparse_matrix_t *subD, *subL, *subU, *subG, *miniSchurs;
     if(argc != 7){
         printf("Incorrect no of parameters passed, command line format:\nmain [filename] [matrix_descr] [matrix_order] [matrix_index_format] [nparts] [sizeG]\n");
         exit(-1);
@@ -52,6 +54,7 @@ int main(int argc, char** argv){
     stG = 1;
     subGsz = (G.n - (G.n % nparts))/nparts;
     endG = subGsz;
+    createHandles();
     for(int i=0;i<nparts;i++){
         if(i == nparts - 1){
             endD = D.n;
@@ -61,7 +64,7 @@ int main(int argc, char** argv){
         getSubMatrix(&L, NULL, &d_L, subL + i, stG, endG, stD, endD, 0);
         getSubMatrix(&U, NULL, &d_U, subU + i, stD, endD, stG, endG, 0);
         getSubMatrix(&G, NULL, &d_G, subG + i, stG, endG, stG, endG, 0);
-        // calculateMiniSchur(&miniSchurs[i], &subD, &subL, &subU, &subG);
+        calculateMiniSchur(&miniSchurs[i], subD + i, subL + i, subU + i, subG + i);
         stD = endD + 1;
         endD += subDsz;
         stG = endG + 1;

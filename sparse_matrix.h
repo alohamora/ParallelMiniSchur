@@ -29,8 +29,6 @@ typedef struct sparse_matrix_t {
     float *vals;
 }sparse_matrix_t;
 
-ll *MAJOR_SORTING_INDEX, *MINOR_SORTING_INDEX;
-
 #ifdef __cplusplus
 extern "C" {
 #endif

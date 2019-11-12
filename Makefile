@@ -2,4 +2,4 @@
 
 all:    #target name
 	mkdir -p bin
-	nvcc main.c sparse_matrix.cu helper.c -o bin/main
+	nvcc main.c sparse_matrix.cu mini_schur.cu helper.c -o bin/main -lcusparse -lcusolver 
