@@ -29,9 +29,9 @@ void calculateMiniSchur(sparse_matrix_t* schur, sparse_matrix_t* D, sparse_matri
     float *d_A;
     x = (float *)malloc((U->n * U->m) * sizeof(float));
     y = (float *)malloc((U->n * U->m) * sizeof(float));
-    printf("%lld %lld\n", U->n, U->m);                         
+    // printf("%lld %lld\n", U->n, U->m);                         
     calculateInverse(y, d_y, x, D, U);
-    for(int i=0;i<(U->n * U->m);i++)    printf("%f %f\n", x[i], y[i]);
+    // for(int i=0;i<(U->n * U->m);i++)    printf("%f %f\n", x[i], y[i]);
     cudaMalloc((void **)&d_x, (D->n * U->m) * sizeof(float));
     cudaMemcpy(d_x, x, (D->n * U->m) * sizeof(float), cudaMemcpyHostToDevice);
     // dense2SparseS(d_x, &d_nnzPerVector, &d_A, &d_A_RowIndices, &d_A_ColIndices, nnz, handle, D->n, U->m);

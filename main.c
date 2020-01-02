@@ -33,6 +33,8 @@ int main(int argc, char** argv){
     A.index = atoi(argv[4]);
     A.memtype = CPU;
     fscanf(lhs_input, "%lld %lld %lld", &A.n, &A.m, &A.nnz);
+    printf("Input matrix dimensions - (%lld, %lld)\n", A.n, A.m);
+    printf("No of non zeros = %lld\n", A.nnz);
     sparseMatrixMalloc(&A);
     for(ll i=0;i<A.nnz;i++){
             fscanf(lhs_input, "%lld %lld %f", &A.rows[i],&A.cols[i],&A.vals[i]);
@@ -41,6 +43,7 @@ int main(int argc, char** argv){
     t = clock();
     printf("Starting to build preconditioner...\n");
     sparseMatrixCopy(&A, &d_A, GPU);
+    printf("Partitioning matrix into blocks...\n");
     getSubMatrix(&A, &D, &d_A, &d_D, 1, A.n - sizeG, 1, A.m - sizeG, 1);
     getSubMatrix(&A, &L, &d_A, &d_L, A.n - sizeG + 1, A.n, 1, A.m - sizeG, 1);
     getSubMatrix(&A, &U, &d_A, &d_U, 1, A.n - sizeG, A.m - sizeG + 1, A.m, 1);
@@ -55,6 +58,7 @@ int main(int argc, char** argv){
     subGsz = (G.n - (G.n % nparts))/nparts;
     endG = subGsz;
     createHandles();
+    printf("Generating mini schur complements with no of parts = %lld\n", nparts);
     for(int i=0;i<nparts;i++){
         if(i == nparts - 1){
             endD = D.n;
@@ -69,6 +73,7 @@ int main(int argc, char** argv){
         endD += subDsz;
         stG = endG + 1;
         endG += subGsz;
+        printf("Iteration %d completed...\n", i);
     }
     t = clock() - t;
     time_taken = ((double)t)/CLOCKS_PER_SEC;
